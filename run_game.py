@@ -34,8 +34,9 @@ def run_match(map_name, p1_bot_name, p2_bot_name, replay_file_name):
     if os.path.isfile(map_path):
         map_settings = MapInfo(custom_map_path=map_path)
     else:
-        print(f"Map {map_path} could not be found. Run python3 main.py -h for help. Exiting")
-        exit(0)
+        map_settings = MapInfo()
+        # print(f"Map {map_path} could not be found. Run python3 main.py -h for help. Exiting")
+        # exit(0)
 
     bot_folder = os.path.join(dir_path, "./bots")
     bot1_path = f"{bot_folder}/{game_settings['p1']}.py"
