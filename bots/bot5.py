@@ -179,6 +179,4 @@ class MyPlayer(Player):
       done = not has_built 
 
     self.set_bid(bid_amount)
-    if bid_amount != 0:
-      print("bidded ", bid_amount)
     return
