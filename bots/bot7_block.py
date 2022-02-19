@@ -177,7 +177,7 @@ class MyPlayer(Player):
             self.build(StructureType.TOWER, tx, ty)
             build_targets.append((tx, ty))
             map[tx][ty] = Tile(map[tx][ty].x, map[tx][ty].y, map[tx][ty].passability,
-              map[tx][ty].population, Structure(StructureType.ROAD, tx,ty, player_info.team))
+              map[tx][ty].population, Structure(StructureType.TOWER, tx,ty, player_info.team))
             has_built = True
             self.towers_we_tried_to_build.add((tx, ty))
     else:
