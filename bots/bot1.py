@@ -142,7 +142,7 @@ class MyPlayer(Player):
 
 
   def play_turn(self, turn_num, map, player_info):
-    print(turn_num)
+    # print(turn_num)
 
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])

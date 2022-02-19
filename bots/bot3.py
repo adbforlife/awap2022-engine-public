@@ -3,10 +3,10 @@ import sys
 import random
 
 import heapq
+import math
 
 import numpy as np
-from copy import deepcopy
-from src.game import Tile
+
 
 from src.player import *
 from src.structure import *
@@ -55,27 +55,48 @@ class MyPlayer(Player):
   def __init__(self):
     # print("Init")
     self.turn = 0
-
+    self.covered_tiles = set()
     return
 
   def is_valid(self, i, j, width, height):
     return i >= 0 and i < width and j >= 0 and j < height
 
-  def try_build_one(self, curr_money, m, team):
+  def try_build_one(self, curr_money, map, player_info, turns_left):
     # returns new money and whether or not it built
-    # modifies m
     has_built = False
 
-    out, paths = compute_passabilities(m, team)
+    out, paths = compute_passabilities(map, player_info.team)
+    best_cost = math.inf
+    best_pos = (-1,-1)
+    for i in range(self.WIDTH):
+      for j in range(self.HEIGHT):
+        if map[i][j].population > 0 and map[i][j].structure is None and out[i][j] > 0:
+          population_increase = 0
+          for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
+            if self.is_valid(i+_i, j+_j, self.WIDTH, self.HEIGHT) and (i+_i, j+_j) not in self.covered_tiles:
+              population_increase += map[i+_i][j+_j].population
+          if population_increase == 0:
+            continue
+          total_cost = map[i][j].passability * 250 \
+            + (out[i][j] - map[i][j].passability) * 10 \
+            - population_increase * turns_left
+          # (cost of tower) + (cost of roads) - (increase in population) * (turns left)
+          if total_cost < best_cost:
+            best_cost = total_cost
+            best_pos = (i,j)
+    # print(best_cost)
+    
+    '''
     best_d = 10000
     best_pos = (-1,-1)
     for i in range(self.WIDTH):
       for j in range(self.HEIGHT):
-        if m[i][j].population > 0 and m[i][j].structure is None:
-          if out[i][j] > 0:
-            if out[i][j] < best_d:
-              best_d = out[i][j]
-              best_pos = (i,j)
+        if map[i][j].population > 0 and map[i][j].structure is None:
+          d = prev_guys[i][j][2]
+          if best_d > d:
+            best_d = d
+            best_pos = (i,j)
+    '''
 
     if best_pos != (-1, -1):
       i,j = best_pos 
@@ -83,23 +104,50 @@ class MyPlayer(Player):
       for k in range(len(path)):
         tx,ty = path[k]
         if k != len(path) - 1:
-          cost = m[tx][ty].passability * 10
+          cost = map[tx][ty].passability * 10
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
-            m[tx][ty] = Tile(m[tx][ty].x, m[tx][ty].y, m[tx][ty].passability,
-              m[tx][ty].population, Structure(StructureType.ROAD, i,j, team))
             has_built = True
         else:
-          cost = m[tx][ty].passability * 250
+          cost = map[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
-            m[tx][ty] = Tile(m[tx][ty].x, m[tx][ty].y, m[tx][ty].passability,
-              m[tx][ty].population, Structure(StructureType.TOWER, i,j, team))
-            has_built = True 
+            has_built = True
+            for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
+              self.covered_tiles.add((tx+_i, ty+_j))
+
         
+    '''
+    if best_pos != (-1, -1):
+      i,j = best_pos
+      path = []
+      d = best_d
+      while d > 0:
+        path.append((i,j))
+        a,b = prev_guys[i][j][0], prev_guys[i][j][1]
+        d = prev_guys[i][j][2]
+        i,j = a,b
+      for k in range(len(path))[::-1]:
+        tx,ty = path[k]
+        if k != 0:
+          cost = map[tx][ty].passability * 10
+          if cost < curr_money:
+            curr_money -= cost
+            self.build(StructureType.ROAD, tx, ty)
+            has_built = True
+        else:
+          cost = map[tx][ty].passability * 250
+          if cost < curr_money:
+            curr_money -= cost
+            self.build(StructureType.TOWER, tx, ty)
+            has_built = True
+    '''
+    
     return (curr_money, has_built)
+
+
 
 
   def play_turn(self, turn_num, map, player_info):
@@ -107,12 +155,6 @@ class MyPlayer(Player):
 
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])
-
-    m = [[None for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
-    for i in range(self.WIDTH):
-      for j in range(self.HEIGHT):
-        m[i][j] = Tile(map[i][j].x, map[i][j].y, map[i][j].passability,
-          map[i][j].population, Structure.make_copy(map[i][j].structure))
 
     # find tiles on my team
     my_structs = []
@@ -125,53 +167,15 @@ class MyPlayer(Player):
           if st.team == player_info.team:
             my_structs.append(st)
     
-
-    # try targets one by one
+    # find prev_guys
     curr_money = player_info.money
+    
     done = False
     while not done:
-      curr_money, has_built = self.try_build_one(curr_money, m, player_info.team)
+      curr_money, has_built = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
       done = not has_built 
-    
 
     # randomly bid 1 or 2
-    self.set_bid(random.randint(4, 6))
+    self.set_bid(random.randint(1, 2))
 
     return
-
-
-  ''' Helper method for trying to build a random structure'''
-  def try_random_build(self, map, my_structs, player_info):
-      # choose a type of structure to build
-      # build a tower for every 4 roads
-      if len(my_structs) % 5 == 4:
-          build_type = StructureType.TOWER
-      else:
-          build_type = StructureType.ROAD
-
-      # identify the set of tiles that we can build on
-      valid_tiles = []
-
-      # look for a empty tile that is adjacent to one of our structs
-      for x in range(self.MAP_WIDTH):
-          for y in range(self.MAP_HEIGHT):
-              # check this tile contains one of our structures
-              st = map[x][y].structure
-              if st is None or st.team != player_info.team:
-                  continue
-              # check if any of the adjacent tiles are open
-              for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                  (nx, ny) = (st.x + dx, st.y + dy)
-                  # check if adjacent tile is valid (on the map and empty)
-                  if 0 <= nx < self.MAP_WIDTH and 0 <= ny < self.MAP_HEIGHT:
-                      if map[nx][ny].structure is None:
-                          cost = build_type.get_base_cost() * map[nx][ny].passability
-                          # check if my team can afford this structure
-                          if player_info.money >= cost:
-                              # attempt to build
-                              valid_tiles.append((nx, ny))
-
-      # choose a random tile to build on
-      if(len(valid_tiles) > 0):
-          tx, ty = random.choice(valid_tiles)
-          self.build(build_type, tx, ty)
