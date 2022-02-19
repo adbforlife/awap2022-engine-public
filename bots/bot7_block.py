@@ -139,7 +139,7 @@ class MyPlayer(Player):
     best_pos = (-1,-1)
     for i in range(self.WIDTH):
       for j in range(self.HEIGHT):
-        if population_increase[i, j] > 0 and out[i][j] > 0 and map[i][j].structure is None:
+        if population_increase[i, j] > 0 and out[i][j] > 0 and map[i][j].structure is None and not self.covered(map, i, j, player_info.team):
           cost_tower = map[i][j].passability * 250
           cost_roads = (out[i][j] - map[i][j].passability) * 10
           turns_to_build = max(0, (cost_tower + cost_roads - curr_money) / self.per_turn_income)
