@@ -112,9 +112,15 @@ class MyPlayer(Player):
     has_built = False
     build_targets = []
 
+    covered_guys = []
+    for i in range(self.WIDTH):
+      for j in range(self.HEIGHT):
+        if self.covered(map, i, j, player_info.team):
+          covered_guys.append((i,j))
+
     population_increase = np.array([
       [
-        map[i][j].population if (i, j) not in self.covered_tiles else 0
+        map[i][j].population if (i, j) not in covered_guys else 0
         for j in range(self.HEIGHT)
       ]
       for i in range(self.WIDTH)
