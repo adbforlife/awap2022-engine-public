@@ -11,43 +11,64 @@ from src.custom_json import *
 from src.game_constants import GameConstants as GC
 
 maps = ["flappy", "island", "modified_flappy", "multiple_islands", "ridges"]
+bots_to_use = ["bot1", "bot2"] # , "c1", "c2", "c3"]
+nbots = len(bots_to_use)
+replay_file_base = "tournament_replay"
+
+class Bot():
+	def __init__(self, name):
+		self.name = name
+		self.wins = 0
+		self.rounds_played = 0
+
+	def update_result(self, did_win):
+		self.rounds_played += 1
+		if did_win:
+			self.wins += 1
+
+	def win_rate(self):
+		return self.wins / self.rounds_played
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
-	# parser.add_argument("-m","--map_name", help="Run with custom map (./maps/map-CUSTOM_MAP_NAME.awap22m).", default=None)
-	parser.add_argument("-n","--rounds", help="Number of rounds to run for.", default=200)
-	parser.add_argument("-p1","--p1_bot_name", help="Player 1 bot name (./bots/P1_BOT_NAME.py).", default=None)
-	parser.add_argument("-p2","--p2_bot_name", help="Player 2 bot name (./bots/P2_BOT_NAME.py).", default=None)
-	parser.add_argument("-replay","--replay_file_name", help="Replay file name (./replays/{REPLAY_NAME}.awap22r)", default=None)
+	parser.add_argument("-n","--rounds", help="Number of rounds to run for.", default=5)
 
 	args = parser.parse_args()
 
 	rounds = int(args.rounds)
-	replay_file_base = args.replay_file_name
 
-	results = []
-	bot_1_wins = 0
-	bot_2_wins = 0
+	bots = []
+	for bot in bots_to_use:
+		bots.append(Bot(bot))
 
 	for i in range(rounds):
 		if i < len(maps):
 			selected_map = maps[i % len(maps)]
 		else:
 			selected_map = "bad_baba_nonexistent_map"
-		game_result = run_match(selected_map, args.p1_bot_name, args.p2_bot_name, f"replay_file_base_{i}")
-		results.append((i, game_result["winner"]))
-		print(f"""Winner: {game_result["winner"]}""")
-		
-		if game_result["winner"] == 1:
-			bot_1_wins += 1
-		elif game_result["winner"] == 2:
-			bot_2_wins += 1
-		else:
-			print("Unrecognized winner")
 
-		print("Bot 1 win rate: ", bot_1_wins/(i+1) * 100)
-		print("Bot 2 win rate: ", bot_2_wins/(i+1) * 100)
+		for i in range(nbots):
+			for j in range(nbots):
+				if i == j:
+					continue
+				bot_1 = bots[i]
+				bot_2 = bots[j]
 
+				game_result = run_match(selected_map, bot_1.name, bot_2.name, f"replay_file_base_{bot_1.name}_{bot_2.name}_{i}")
 
-	for (round, res) in results:
-		print(f"""Round {round} winner: {res}""")
+				if game_result["winner"] == 1:
+					bot_1.update_result(did_win=True)
+					bot_2.update_result(did_win=False)
+					print(f"{bot_1.name} won against {bot_2}.name")
+				elif game_result["winner"] == 2:
+					bot_1.update_result(did_win=False)
+					bot_2.update_result(did_win=True)
+					print(f"{bot_2.name} won against {bot_1}.name")
+				else:
+					print("Unrecognized winner")
+				
+				for bot in bots:
+					print("{bot.name} win rate: ", bot.win_rate() * 100)
+
+	# for bot in bots:
+	# 	print("{bot.name} win rate: ", bot.win_rate() * 100)
