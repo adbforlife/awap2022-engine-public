@@ -30,7 +30,10 @@ if __name__ == "__main__":
 	bot_2_wins = 0
 
 	for i in range(rounds):
-		selected_map = maps[i % len(maps)]
+		if i < len(maps):
+			selected_map = maps[i % len(maps)]
+		else:
+			selected_map = "bad_baba_nonexistent_map"
 		game_result = run_match(selected_map, args.p1_bot_name, args.p2_bot_name, f"replay_file_base_{i}")
 		results.append((i, game_result["winner"]))
 		print(f"""Winner: {game_result["winner"]}""")

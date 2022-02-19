@@ -24,22 +24,6 @@ def run_match(map_name, p1_bot_name, p2_bot_name, replay_file_name):
     with open(os.path.join(dir_path, "./game_settings.json"), "r") as f:
         game_settings = json.load(f)
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("-m","--map_name", help="Run with custom map (./maps/map-CUSTOM_MAP_NAME.awap22m).", default=None)
-    # parser.add_argument("-p1","--p1_bot_name", help="Player 1 bot name (./bots/P1_BOT_NAME.py).", default=None)
-    # parser.add_argument("-p2","--p2_bot_name", help="Player 2 bot name (./bots/P2_BOT_NAME.py).", default=None)
-    # parser.add_argument("-replay","--replay_file_name", help="Replay file name (./replays/{REPLAY_NAME}.awap22r)", default=None)
-    # args = parser.parse_args()
-
-    # if args.map_name:
-    #     game_settings["map"] = args.map_name
-    # if args.p1_bot_name:
-    #     game_settings["p1"] = args.p1_bot_name
-    # if args.p2_bot_name:
-    #     game_settings["p2"] = args.p2_bot_name
-    # if args.replay_file_name:
-    #     game_settings["replay"] = args.replay_file_name
-
     game_settings["map"] = map_name
     game_settings["p1"] = p1_bot_name
     game_settings["p2"] = p2_bot_name
