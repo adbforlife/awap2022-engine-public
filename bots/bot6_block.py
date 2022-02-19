@@ -7,6 +7,7 @@ import math
 
 import numpy as np
 
+from src.game import Tile
 from src.player import *
 from src.structure import *
 from src.game_constants import GameConstants as GC
@@ -103,6 +104,8 @@ class MyPlayer(Player):
                   if curr_money > cost:
                     curr_money -= cost
                     self.build(StructureType.ROAD, a, b)
+                    m[a][b] = Tile(m[a][b].x, m[a][b].y, m[a][b].passability,
+                      m[a][b].population, Structure(StructureType.ROAD, a,b, team))
                   else:
                     return curr_money
 
@@ -146,22 +149,8 @@ class MyPlayer(Player):
           if total_cost < best_cost:
             best_cost = total_cost
             best_pos = (i,j)
-    # print(best_cost)
-    # if best_cost == math.inf:
-    #   breakpoint()
-    
-    '''
-    best_d = 10000
-    best_pos = (-1,-1)
-    for i in range(self.WIDTH):
-      for j in range(self.HEIGHT):
-        if map[i][j].population > 0 and map[i][j].structure is None:
-          d = prev_guys[i][j][2]
-          if best_d > d:
-            best_d = d
-            best_pos = (i,j)
-    '''
 
+    # build if we can
     if best_pos != (-1, -1):
       i,j = best_pos 
       path = paths[(i,j)]
@@ -173,6 +162,8 @@ class MyPlayer(Player):
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
             build_targets.append((tx, ty))
+            map[tx][ty] = Tile(map[tx][ty].x, map[tx][ty].y, map[tx][ty].passability,
+              map[tx][ty].population, Structure(StructureType.ROAD, tx,ty, player_info.team))
             has_built = True
         else:
           cost = map[tx][ty].passability * 250
@@ -180,10 +171,13 @@ class MyPlayer(Player):
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
             build_targets.append((tx, ty))
+            map[tx][ty] = Tile(map[tx][ty].x, map[tx][ty].y, map[tx][ty].passability,
+              map[tx][ty].population, Structure(StructureType.ROAD, tx,ty, player_info.team))
             has_built = True
             self.towers_we_tried_to_build.clear()
             self.towers_we_tried_to_build.add((tx, ty))
     else:
+      # block if we can't build
       self.try_block(curr_money, map, player_info.team)
 
     out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team.value)
@@ -203,6 +197,13 @@ class MyPlayer(Player):
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])
 
+    # copy map
+    m = [[None for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
+    for i in range(self.WIDTH):
+      for j in range(self.HEIGHT):
+        m[i][j] = Tile(map[i][j].x, map[i][j].y, map[i][j].passability,
+          map[i][j].population, Structure.make_copy(map[i][j].structure))
+
     for i, j in self.towers_we_tried_to_build:
       if map[i][j].structure.type == StructureType.TOWER and map[i][j].structure.team == player_info.team:
         for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
@@ -216,7 +217,7 @@ class MyPlayer(Player):
     really_want = False
     
     while not done:
-      curr_money, has_built, should_bid = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
+      curr_money, has_built, should_bid = self.try_build_one(curr_money, m, player_info, 250 - turn_num)
       if not really_want and should_bid:
           bid_amount += random.randint(10, 20)
           curr_money -= bid_amount
