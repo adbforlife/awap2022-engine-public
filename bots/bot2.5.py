@@ -58,8 +58,20 @@ class MyPlayer(Player):
 
     return
 
-  def is_valid(self, i, j, width, height):
-    return i >= 0 and i < width and j >= 0 and j < height
+  def is_valid(self, i, j):
+    return i >= 0 and i < self.WIDTH and j >= 0 and j < self.HEIGHT
+
+  def covered(self, m, i, j, team):
+    for a in range(-2, 3):
+      for b in range(-2, 3):
+        if abs(a) + abs(b) <= 2:
+          c = i + a
+          d = j + b 
+          if self.is_valid(c,d):
+            if m[c][d].structure is not None:
+              if m[c][d].structure.team == team and m[c][d].structure.type == StructureType.TOWER:
+                return True
+    return False
 
   def try_build_one(self, curr_money, m, team):
     # returns new money and whether or not it built
@@ -72,10 +84,11 @@ class MyPlayer(Player):
     for i in range(self.WIDTH):
       for j in range(self.HEIGHT):
         if m[i][j].population > 0 and m[i][j].structure is None:
-          if out[i][j] > 0:
-            if out[i][j] < best_d:
-              best_d = out[i][j]
-              best_pos = (i,j)
+          if not self.covered(m, i, j, team):
+            if out[i][j] > 0:
+              if out[i][j] < best_d:
+                best_d = out[i][j]
+                best_pos = (i,j)
 
     if best_pos != (-1, -1):
       i,j = best_pos 
