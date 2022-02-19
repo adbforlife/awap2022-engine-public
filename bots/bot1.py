@@ -102,19 +102,6 @@ class MyPlayer(Player):
     # returns new money and whether or not it built
     has_built = False
 
-    '''
-    out, paths = compute_passabilities(map, player_info.team)
-    best_d = 10000
-    best_pos = (-1,-1)
-    for i in range(self.WIDTH):
-      for j in range(self.HEIGHT):
-        if map[i][j].population > 0 and map[i][j].structure is None:
-          if out[i][j] > 0:
-            if out[i][j] < best_d:
-              best_d = out[i][j]
-              best_pos = (i,j)
-    
-    '''
     best_d = 10000
     best_pos = (-1,-1)
     for i in range(self.WIDTH):
