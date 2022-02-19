@@ -513,14 +513,17 @@ class Game:
                 print(f"{state.team} turn skipped - in timeout")
         # update game state based on player actions
         # give build priority based on bid
-        print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
+        # SUPPRESSED
+        # print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
         if self.p1._bid > self.p2._bid or self.p1._bid == self.p2._bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
-            print(f"RED starts")
+            # SUPPRESSED
+            # print(f"RED starts")
             bid_winner = 0
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
         else:
-            print(f"BLUE starts")
+            # SUPPRESSED
+            # print(f"BLUE starts")
             bid_winner = 1
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
@@ -688,23 +691,26 @@ class Game:
 
         save_file_path = f"{save_dir}/{save_file_name}.awap22r"
 
+        game_result = {
+            "metadata": self.metadata,
+            "map": self.simple_map,
+            "generators": self.generators,
+            "game_constants": game_constants,
+            "frame_changes": self.frame_changes,
+            "money_history": self.money_history,
+            "utility_history": self.utility_history,
+            "time_bank_history": self.time_bank_history,
+            "prev_time_history": self.prev_time_history,
+            "active_history": self.active_history,
+            "bid_history": self.bid_history,
+            "structure_type_ids": structure_type_ids,
+            "winner": self.winner
+        }
+
         with open(save_file_path, "w") as f:
-            obj = {
-                "metadata": self.metadata,
-                "map": self.simple_map,
-                "generators": self.generators,
-                "game_constants": game_constants,
-                "frame_changes": self.frame_changes,
-                "money_history": self.money_history,
-                "utility_history": self.utility_history,
-                "time_bank_history": self.time_bank_history,
-                "prev_time_history": self.prev_time_history,
-                "active_history": self.active_history,
-                "bid_history": self.bid_history,
-                "structure_type_ids": structure_type_ids,
-                "winner": self.winner
-            }
-            json.dump(obj, f, cls=CustomEncoder)
+            json.dump(game_result, f, cls=CustomEncoder)
 
         print(f"\nSaved replay file in {save_file_path}")
         print(f"Match ended: '{self.p1_name}' vs '{self.p2_name}' on '{self.map_name}'")
+
+        return game_result
