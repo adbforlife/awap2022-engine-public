@@ -64,6 +64,11 @@ class MyPlayer(Player):
   def is_valid(self, i, j, width, height):
     return i >= 0 and i < width and j >= 0 and j < height
 
+  def deny(self, turns_left):
+    # get list of points for access denial
+    min_rounds = 10
+    pass
+    
   def try_build_one(self, curr_money, map, player_info, turns_left):
     # returns new money and whether or not it built
     has_built = False
@@ -158,15 +163,22 @@ class MyPlayer(Player):
     curr_money = player_info.money
     
     done = False
-    bid = False
-    bid_amount = 0
+    bid_amount = random.randint(1, 2)
+    curr_money -= bid_amount
+    really_want = False
+
     while not done:
       curr_money, has_built, should_bid = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
-      if should_bid:
-          bid_delta = random.randint(1, 2)
-          bid_amount += bid_delta
-          curr_money -= bid_delta
+      if not really_want and should_bid:
+          bid_amount += random.randint(10, 20)
+          curr_money -= bid_amount
+          really_want = True
+          # bid_delta = random.randint(1, 2)
+          # bid_amount += bid_delta
+          # curr_money -= bid_delta
       done = not has_built 
 
     self.set_bid(bid_amount)
+    if bid_amount != 0:
+      print("bidded ", bid_amount)
     return
