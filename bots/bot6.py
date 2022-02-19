@@ -120,6 +120,7 @@ class MyPlayer(Player):
             best_pos = (i,j)
     '''
 
+    self.towers_we_tried_to_build.clear()
     if best_pos != (-1, -1):
       i,j = best_pos 
       path = paths[(i,j)]
@@ -139,7 +140,6 @@ class MyPlayer(Player):
             self.build(StructureType.TOWER, tx, ty)
             build_targets.append((tx, ty))
             has_built = True
-            self.towers_we_tried_to_build.clear()
             self.towers_we_tried_to_build.add((tx, ty))
 
     out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team.value)

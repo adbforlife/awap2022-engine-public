@@ -56,11 +56,9 @@ class MyPlayer(Player):
     # print("Init")
     self.turn = 0
     self.covered_tiles = set()
+    self.per_turn_income = GC.PLAYER_BASE_INCOME
     self.towers_we_tried_to_build = set()
-
-    # # precompute blocking rings
-    # for i1 in range(self.width):
-    #   for i2 in range(i1 + ))
+    self.ALPHA = 0.8
 
   def is_valid(self, i, j):
     return i >= 0 and i < self.WIDTH and j >= 0 and j < self.HEIGHT
@@ -142,10 +140,11 @@ class MyPlayer(Player):
     for i in range(self.WIDTH):
       for j in range(self.HEIGHT):
         if population_increase[i, j] > 0 and out[i][j] > 0 and map[i][j].structure is None:
-          total_cost = map[i][j].passability * 250 \
-            + (out[i][j] - map[i][j].passability) * 10 \
-            - population_increase[i, j] * turns_left
-          # (cost of tower) + (cost of roads) - (increase in population) * (turns left)
+          cost_tower = map[i][j].passability * 250
+          cost_roads = (out[i][j] - map[i][j].passability) * 10
+          turns_to_build = max(0, (cost_tower + cost_roads - curr_money) / self.per_turn_income)
+          total_cost =  cost_tower + cost_roads - population_increase[i, j] * (turns_left - turns_to_build) * self.ALPHA
+          # (cost of tower) + (cost of roads) - (increase in population) * (turns left - turns to build) * alpha
           if total_cost < best_cost:
             best_cost = total_cost
             best_pos = (i,j)
@@ -207,6 +206,8 @@ class MyPlayer(Player):
       if map[i][j].structure.type == StructureType.TOWER and map[i][j].structure.team == player_info.team:
         for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
           self.covered_tiles.add((i+_i, j+_j))
+          if self.is_valid(i+_i, j+_j):
+            self.per_turn_income += map[i+_i][j+_j].population
 
     curr_money = player_info.money
 
