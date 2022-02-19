@@ -2,6 +2,7 @@ import json
 import argparse
 import os
 import sys
+# import ipdb
 
 from run_game import run_match
 from src.structure import *
@@ -23,11 +24,23 @@ if __name__ == "__main__":
 	replay_file_base = args.replay_file_name
 
 	results = []
+	bot_1_wins = 0
+	bot_2_wins = 0
 
 	for i in range(rounds):
 		game_result = run_match(args.map_name, args.p1_bot_name, args.p2_bot_name, f"replay_file_base_{i}")
 		results.append((i, game_result["winner"]))
-		# print(f"""Winner: {game_result["winner"]}""")
+		print(f"""Winner: {game_result["winner"]}""")
+		
+		if game_result["winner"] == 1:
+			bot_1_wins += 1
+		elif game_result["winner"] == 2:
+			bot_2_wins += 1
+		else:
+			print("Unrecognized winner")
+
+		print("Bot 1 win rate: ", bot_1_wins/(i+1) * 100)
+		print("Bot 2 win rate: ", bot_2_wins/(i+1) * 100)
 
 
 	for (round, res) in results:

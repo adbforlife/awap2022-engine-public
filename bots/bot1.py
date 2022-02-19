@@ -18,7 +18,7 @@ def compute_passabilities(map, team):
 class MyPlayer(Player):
 
   def __init__(self):
-    print("Init")
+    # print("Init")
     self.turn = 0
 
     return
@@ -77,7 +77,7 @@ class MyPlayer(Player):
           if best_d > d:
             best_d = d
             best_pos = (i,j)
-    print(best_pos, best_d)
+    # print(best_pos, best_d)
     if best_pos != (-1, -1):
       i,j = best_pos
       path = []
