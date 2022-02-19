@@ -61,44 +61,6 @@ class MyPlayer(Player):
   def is_valid(self, i, j, width, height):
     return i >= 0 and i < width and j >= 0 and j < height
 
-  def find_prev_guys(self, map, player_info):
-    # Return [(tx,ty, length)] (path to cell)
-    prev_guys = [[(-1, -1) for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
-
-    # populate existing 
-    for i in range(self.WIDTH):
-      for j in range(self.HEIGHT):
-        st = map[i][j].structure
-        if st is not None:
-          if st.team == player_info.team:
-            prev_guys[i][j] = (i,j,0)
-    
-    # bag of things to pop off
-    dones = [[False for _ in range(self.HEIGHT)] for _ in range(self.WIDTH)]
-    todos = []
-    for i in range(self.WIDTH):
-      for j in range(self.HEIGHT):
-        if prev_guys[i][j] == (i,j,0):
-          todos.append((i,j))
-          dones[i][j] = True
-
-    # pop off
-    ind = 0
-    while ind < len(todos):
-      i,j = todos[ind]
-      d = prev_guys[i][j][2]
-      explores = [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
-      explores = list(filter(lambda x: self.is_valid(x[0], x[1], self.WIDTH, self.HEIGHT), explores))
-      explores = list(filter(lambda x: not dones[x[0]][x[1]], explores))
-      for exp in explores:
-        a,b = exp[0], exp[1]
-        todos.append((a,b))
-        dones[a][b] = True
-        prev_guys[a][b] = (i,j, d + 1)
-      ind += 1
-    
-    return prev_guys
-
   def try_build_one(self, curr_money, m, team):
     # returns new money and whether or not it built
     # modifies m
@@ -125,17 +87,19 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
+            m[tx][ty] = Tile(m[tx][ty].x, m[tx][ty].y, m[tx][ty].passability,
+              m[tx][ty].population, Structure(StructureType.ROAD, i,j, team))
             has_built = True
         else:
           cost = m[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
+            m[tx][ty] = Tile(m[tx][ty].x, m[tx][ty].y, m[tx][ty].passability,
+              m[tx][ty].population, Structure(StructureType.TOWER, i,j, team))
             has_built = True 
         
     return (curr_money, has_built)
-
-
 
 
   def play_turn(self, turn_num, map, player_info):
@@ -161,22 +125,17 @@ class MyPlayer(Player):
           if st.team == player_info.team:
             my_structs.append(st)
     
-    # find prev_guys
-    prev_guys = self.find_prev_guys(map, player_info)
 
+    # try targets one by one
     curr_money = player_info.money
-    
     done = False
     while not done:
       curr_money, has_built = self.try_build_one(curr_money, m, player_info.team)
       done = not has_built 
     
 
-    # call helper method to build randomly
-    # self.try_random_build(map, my_structs, player_info)
-
     # randomly bid 1 or 2
-    self.set_bid(random.randint(1, 2))
+    self.set_bid(random.randint(4, 6))
 
     return
 
