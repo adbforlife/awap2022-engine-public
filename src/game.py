@@ -11,6 +11,8 @@ import json
 import signal
 from contextlib import contextmanager
 import os
+import traceback
+
 
 from .structure import *
 from .player import *
@@ -129,6 +131,9 @@ if os.name != 'nt':
             yield
         finally:
             signal.alarm(0)
+else:
+    class TimeoutException(Exception): pass
+
 
 
 '''
@@ -165,33 +170,49 @@ class Game:
         self.p1_name = p1_path
         self.p2_name = p2_path
 
-        self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
-        self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
         self.PlayerDQ = Player
+        try:
+            self.MyPlayer1 = import_file("Player1", p1_path).MyPlayer
+        except Exception as e:
+            print(f"Issue with loading player 1")
+            traceback.print_exc()
+            self.MyPlayer1 = Player
+        try:
+            self.MyPlayer2 = import_file("Player2", p2_path).MyPlayer
+        except Exception as e:
+            print(f"Issue with loading player 2")
+            traceback.print_exc()
+            self.MyPlayer2 = Player
 
         self.p1_state = PlayerInfo(Team.RED)
         self.p2_state = PlayerInfo(Team.BLUE)
 
         for player, state in [(self.MyPlayer1, self.p1_state),(self.MyPlayer2, self.p2_state)]:
-            try:
-                if os.name == "nt": # Windows
-                    t0 = time.time()
-                    if state == self.p1_state: self.p1 = player()
-                    else: self.p2 = player()
-                    t1 = time.time()
-                    if t1 - t0 > GC.INIT_TIME_LIMIT:
-                        raise TimeoutException
-                else:
-                    with time_limit(GC.INIT_TIME_LIMIT):
+                try:
+                    if os.name == "nt":
+                        t0 = time.time()
                         if state == self.p1_state: self.p1 = player()
                         else: self.p2 = player()
-            except TimeoutException as _:
-                state.time_bank.windows_warning()
-                print(f"[INIT TIMEOUT] {state.team}'s bot used >{GC.INIT_TIME_LIMIT} seconds to initialize; it will not play.")
-                state.dq = True
-                if state == self.p1_state:
-                    self.p1 = self.PlayerDQ()
-                else: self.p2 = self.PlayerDQ()
+                        t1 = time.time()
+                        if t1 - t0 > GC.INIT_TIME_LIMIT:
+                            raise TimeoutException
+                    else:
+                        with time_limit(GC.INIT_TIME_LIMIT):
+                            if state == self.p1_state: self.p1 = player()
+                            else: self.p2 = player()
+                except TimeoutException as _:
+                    state.time_bank.windows_warning()
+                    print(f"[INIT TIMEOUT] {state.team}'s bot used >{GC.INIT_TIME_LIMIT} seconds to initialize; it will not play.")
+                    if state == self.p1_state:
+                        self.p1 = self.PlayerDQ()
+                    else: self.p2 = self.PlayerDQ()
+                except Exception as e:
+                    print(f"[INIT TIMEOUT] {state.team}'s had an Exception")
+                    traceback.print_exc()
+                    if state == self.p1_state:
+                        self.p1 = self.PlayerDQ()
+                    else: self.p2 = self.PlayerDQ()
+
 
         self.winner = None
 
@@ -460,6 +481,7 @@ class Game:
             state.time_bank.time_left += GC.TIME_INC
             if state.newly_active():
                 print(f"[TIMEOUT END] {self.p1_state.team} resumes turns.")
+
             if state.active():
                 # play turn
                 try:
@@ -468,7 +490,9 @@ class Game:
                         player.play_turn(turn_num, self.map_copy(),state._copy())
                         t1 = time.time()
                         penalty = t1 - t0
-                        if penalty > limit:
+                        state.time_bank.time_left -= penalty
+                        if state.time_bank.time_left < 0:
+                            state.time_bank.time_left = 0
                             raise TimeoutException
                     else:
                         t0 = time.time()
@@ -482,20 +506,24 @@ class Game:
                     state.time_bank.windows_warning()
                     print(f"[{GC.TIMEOUT} ROUND TIMEOUT START] {state.team} emptied their time bank.")
                     state.time_bank.paused_at = turn_num
+                except Exception as e:
+                    print("Exception from", state.team)
+                    traceback.print_exc()
             else:
-                if state.dq:
-                    print(f"{state.team} turn skipped - DQ'ed")
                 print(f"{state.team} turn skipped - in timeout")
         # update game state based on player actions
         # give build priority based on bid
-        print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
+        # SUPPRESSED
+        # print(f'Round {turn_num} Bids: R : {self.p1._bid}, B : {self.p2._bid} - ', end='')
         if self.p1._bid > self.p2._bid or self.p1._bid == self.p2._bid and turn_num % 2 == 0: # alternate build priority (if two players try to build on the same tile)
-            print(f"RED starts")
+            # SUPPRESSED
+            # print(f"RED starts")
             bid_winner = 0
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
         else:
-            print(f"BLUE starts")
+            # SUPPRESSED
+            # print(f"BLUE starts")
             bid_winner = 1
             p2_changes = self.try_builds(self.p2._to_build, self.p2_state, Team.BLUE)
             p1_changes = self.try_builds(self.p1._to_build, self.p1_state, Team.RED)
@@ -663,23 +691,26 @@ class Game:
 
         save_file_path = f"{save_dir}/{save_file_name}.awap22r"
 
+        game_result = {
+            "metadata": self.metadata,
+            "map": self.simple_map,
+            "generators": self.generators,
+            "game_constants": game_constants,
+            "frame_changes": self.frame_changes,
+            "money_history": self.money_history,
+            "utility_history": self.utility_history,
+            "time_bank_history": self.time_bank_history,
+            "prev_time_history": self.prev_time_history,
+            "active_history": self.active_history,
+            "bid_history": self.bid_history,
+            "structure_type_ids": structure_type_ids,
+            "winner": self.winner
+        }
+
         with open(save_file_path, "w") as f:
-            obj = {
-                "metadata": self.metadata,
-                "map": self.simple_map,
-                "generators": self.generators,
-                "game_constants": game_constants,
-                "frame_changes": self.frame_changes,
-                "money_history": self.money_history,
-                "utility_history": self.utility_history,
-                "time_bank_history": self.time_bank_history,
-                "prev_time_history": self.prev_time_history,
-                "active_history": self.active_history,
-                "bid_history": self.bid_history,
-                "structure_type_ids": structure_type_ids,
-                "winner": self.winner
-            }
-            json.dump(obj, f, cls=CustomEncoder)
+            json.dump(game_result, f, cls=CustomEncoder)
 
         print(f"\nSaved replay file in {save_file_path}")
         print(f"Match ended: '{self.p1_name}' vs '{self.p2_name}' on '{self.map_name}'")
+
+        return game_result

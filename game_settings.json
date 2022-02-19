@@ -1,6 +1,6 @@
 {
-  "p1": "bot_bfs",
-  "p2": "smart_bot",
-  "map": "cat",
+  "p1": "template_bot",
+  "p2": "random_bot",
+  "map": "ridges",
   "replay": null
 }
