@@ -10,9 +10,9 @@ from src.custom_json import *
 from src.game_constants import GameConstants as GC
 
 maps = ["flappy", "island", "modified_flappy", "multiple_islands", "ridges", "big_blockade", "trench", "two_modes"]
-bots_to_use = ["bot6", "bot4_block", "bot5", "bot1", "bot2", "bot2.5", "bot3", "bot4"] #, "c1", "c2", "c3"]
+bots_to_use = ["bot6_block", "bot6", "bot5", "bot1", "bot2", "bot2.5", "bot3", "bot4"] #, "c1", "c2", "c3"]
 nbots = len(bots_to_use)
-replay_file_base = "tournament_replay"
+replay_file_base = "tourn_replay"
 
 class Bot():
 	def __init__(self, name):
