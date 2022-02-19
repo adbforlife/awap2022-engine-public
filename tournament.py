@@ -2,7 +2,6 @@ import json
 import argparse
 import os
 import sys
-# import ipdb
 
 from run_game import run_match
 from src.structure import *
@@ -10,8 +9,8 @@ from src.game import *
 from src.custom_json import *
 from src.game_constants import GameConstants as GC
 
-maps = ["flappy", "island", "modified_flappy", "multiple_islands", "ridges"]
-bots_to_use = ["bot1", "bot2", "bot3"] # , "c1", "c2", "c3"]
+maps = ["flappy", "island", "modified_flappy", "multiple_islands", "ridges", "big_blockade", "trench", "two_modes"]
+bots_to_use = ["bot1", "bot2", "bot3", "bot2.5"] #, "c1", "c2", "c3"]
 nbots = len(bots_to_use)
 replay_file_base = "tournament_replay"
 
@@ -56,7 +55,7 @@ if __name__ == "__main__":
 				bot_1 = bots[i]
 				bot_2 = bots[j]
 
-				game_result = run_match(selected_map, bot_1.name, bot_2.name, f"replay_file_base_{bot_1.name}_{bot_2.name}_{i}")
+				game_result = run_match(selected_map, bot_1.name, bot_2.name, f"{replay_file_base}_{bot_1.name}_{bot_2.name}_{i}")
 
 				if game_result["winner"] == 1:
 					bot_1.update_result(did_win=True)
