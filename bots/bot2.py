@@ -102,7 +102,6 @@ class MyPlayer(Player):
     # returns new money and whether or not it built
     has_built = False
 
-    '''
     out, paths = compute_passabilities(map, player_info.team)
     best_d = 10000
     best_pos = (-1,-1)
@@ -124,7 +123,27 @@ class MyPlayer(Player):
           if best_d > d:
             best_d = d
             best_pos = (i,j)
+    '''
 
+    if best_pos != (-1, -1):
+      i,j = best_pos 
+      path = paths[(i,j)]
+      for k in range(len(path)):
+        tx,ty = path[k]
+        if k != len(path) - 1:
+          cost = map[tx][ty].passability * 10
+          if cost < curr_money:
+            curr_money -= cost
+            self.build(StructureType.ROAD, tx, ty)
+            has_built = True
+        else:
+          cost = map[tx][ty].passability * 250
+          if cost < curr_money:
+            curr_money -= cost
+            self.build(StructureType.TOWER, tx, ty)
+            has_built = True 
+        
+    '''
     if best_pos != (-1, -1):
       i,j = best_pos
       path = []
@@ -147,7 +166,8 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
-            has_built = True 
+            has_built = True
+    '''
     
     return (curr_money, has_built)
 
