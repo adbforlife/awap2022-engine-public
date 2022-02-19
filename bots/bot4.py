@@ -57,9 +57,6 @@ class MyPlayer(Player):
     self.covered_tiles = set()
     self.towers_we_tried_to_build = set()
 
-    # # precompute blocking rings
-    # for i1 in range(self.width):
-    #   for i2 in range(i1 + ))
 
   def is_valid(self, i, j, width, height):
     return i >= 0 and i < width and j >= 0 and j < height
@@ -119,6 +116,7 @@ class MyPlayer(Player):
             best_pos = (i,j)
     '''
 
+    self.towers_we_tried_to_build.clear()
     if best_pos != (-1, -1):
       i,j = best_pos 
       path = paths[(i,j)]
@@ -136,7 +134,6 @@ class MyPlayer(Player):
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
             has_built = True
-            self.towers_we_tried_to_build.clear()
             self.towers_we_tried_to_build.add((tx, ty))
 
         

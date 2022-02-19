@@ -37,6 +37,41 @@ def compute_passabilities(map, team):
     return out, paths
 
 
+# def compute_passabilities_v2(map, team, per_turn_income, turns_left):
+#     """
+#     Computes grid of "smart costs" for given team.
+#     Smart cost := (
+#         (cost of cell towers) + (cost of roads) - 0.8 * (income from population)
+#     )
+#     -1 denotes impossible.
+#     """
+#     h = len(map)
+#     w = len(map[0])
+#     out = np.ones((h, w), dtype=np.float) * -1
+#     paths = {}
+#     frontier = [
+#         [0, i, j, []]
+#         for i in range(h)
+#         for j in range(w)
+#         if map[i][j].structure is not None and map[i][j].structure.team == team
+#     ]
+#     while len(frontier) > 0:
+#         cost, i, j, path = heapq.heappop(frontier)
+#         if out[i, j] != -1:
+#             continue
+#         out[i, j] = cost
+#         paths[(i, j)] = path
+#         for _i, _j in ((-1, 0), (1, 0), (0, 1), (0, -1)):
+#             if 0 <= i+_i < h and 0 <= j+_j < w and out[i+_i][j+_j] == -1 and map[i+_i][j+_j].structure is None:
+#                 new_item = [
+#                     cost + map[i+_i][j+_j].passability,
+#                     i+_i,
+#                     j+_j,
+#                     path + [(i+_i, j+_j)]
+#                 ]
+#                 heapq.heappush(frontier, new_item)
+#     return out, paths
+
 if __name__ == '__main__': 
     import os
     import json
