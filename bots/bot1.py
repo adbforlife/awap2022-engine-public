@@ -2,6 +2,11 @@ import sys
 
 import random
 
+import heapq
+
+#import numpy as np
+
+
 from src.player import *
 from src.structure import *
 from src.game_constants import GameConstants as GC
@@ -11,9 +16,36 @@ This bot randomly builds one building per turn (on a valid tile).
 Note that your bot may build multiple structures per turn, as long as you can afford them.
 '''
 
+'''
 def compute_passabilities(map, team):
-  # give grid of passabilities
-  pass
+  """
+  Computes grid of cumulative passabilities for given team.
+  -1 denotes impossible.
+  """
+  h = len(map)
+  w = len(map[0])
+  out = np.ones((h, w), dtype=np.float) * -1
+  frontier = [
+      (0, i, j)
+      for i in range(h)
+      for j in range(w)
+      if map[i][j].structure is not None and map[i][j].structure.team == team
+  ]
+  while len(frontier) > 0:
+      cost, i, j = heapq.heappop(frontier)
+      if out[i, j] != -1:
+          continue
+      out[i, j] = cost
+      for _i, _j in ((-1, 0), (1, 0), (0, 1), (0, -1)):
+          if 0 <= i+_i < h and 0 <= j+_j < w and out[i+_i][j+_j] == -1 and map[i+_i][j+_j].structure is None:
+              new_item = (
+                  cost + map[i+_i][j+_j].passability,
+                  i+_i,
+                  j+_j
+              )
+              heapq.heappush(frontier, new_item)
+  return out
+'''
 
 class MyPlayer(Player):
 
@@ -64,9 +96,15 @@ class MyPlayer(Player):
     
     return prev_guys
 
-  def try_build_one(self, curr_money, prev_guys, map):
+  def try_build_one(self, curr_money, prev_guys, map, player_info):
     # returns new money and whether or not it built
     has_built = False
+
+
+    print('hi')
+    #out = compute_passabilities(map, player_info.team)
+    #print(out)
+    #breakpoint()
 
     best_d = 10000
     best_pos = (-1,-1)
@@ -77,6 +115,9 @@ class MyPlayer(Player):
           if best_d > d:
             best_d = d
             best_pos = (i,j)
+    
+
+
     print(best_pos, best_d)
     if best_pos != (-1, -1):
       i,j = best_pos
@@ -109,10 +150,12 @@ class MyPlayer(Player):
 
   def play_turn(self, turn_num, map, player_info):
 
+    print('hi')
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])
 
     # find tiles on my team
+    print('hi')
     my_structs = []
     for x in range(self.WIDTH):
       for y in range(self.HEIGHT):
@@ -130,7 +173,8 @@ class MyPlayer(Player):
     
     done = False
     while not done:
-      curr_money, has_built = self.try_build_one(curr_money, prev_guys, map)
+      print('hi')
+      curr_money, has_built = self.try_build_one(curr_money, prev_guys, map, player_info)
       done = not has_built 
     
 
