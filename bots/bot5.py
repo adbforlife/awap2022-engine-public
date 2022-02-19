@@ -7,6 +7,7 @@ import math
 
 import numpy as np
 
+import ipdb
 
 from src.player import *
 from src.structure import *
@@ -58,6 +59,7 @@ class MyPlayer(Player):
   def try_build_one(self, curr_money, map, player_info, turns_left):
     # returns new money and whether or not it built
     has_built = False
+    ipdb.set_trace()
 
     out, paths = compute_passabilities(map, player_info.team)
     best_cost = math.inf
@@ -118,7 +120,6 @@ class MyPlayer(Player):
           if st.team == player_info.team:
             my_structs.append(st)
     
-    # find prev_guys
     curr_money = player_info.money
     
     done = False
