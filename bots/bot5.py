@@ -128,11 +128,13 @@ class MyPlayer(Player):
               self.covered_tiles.add((tx+_i, ty+_j))
 
     out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team)
+    should_bid = False
     # For each build target, figure out if bidding necessary
-    for build_target in build_targets:
-	    pass
+    for (x, y) in build_targets:
+	    if out_opp[x][y] >= 0 and out_opp[x][y] < out[x][y]:
+		    should_bid = True
 
-    return (curr_money, has_built)
+    return (curr_money, has_built, should_bid)
 
   def play_turn(self, turn_num, map, player_info):
     self.WIDTH = len(map)
@@ -153,11 +155,15 @@ class MyPlayer(Player):
     curr_money = player_info.money
     
     done = False
+    bid = False
+    bid_amount = 0
     while not done:
-      curr_money, has_built = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
+      curr_money, has_built, should_bid = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
+      if should_bid:
+	      bid_delta = random.randint(1, 2)
+	      bid_amount += bid_delta
+	      curr_money -= bid_delta
       done = not has_built 
 
-    # randomly bid 1 or 2
-    self.set_bid(random.randint(1, 2))
-
+    self.set_bid(bid_amount)
     return
