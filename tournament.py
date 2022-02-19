@@ -49,13 +49,11 @@ if __name__ == "__main__":
 			selected_map = "bad_baba_nonexistent_map"
 
 		for i in range(nbots):
-			for j in range(nbots):
-				if i == j:
-					continue
+			for j in range(i + 1, nbots):
 				bot_1 = bots[i]
 				bot_2 = bots[j]
 
-				game_result = run_match(selected_map, bot_1.name, bot_2.name, f"{replay_file_base}_{bot_1.name}_{bot_2.name}_{i}")
+				game_result = run_match(selected_map, bot_1.name, bot_2.name, f"{replay_file_base}_{bot_1.name}_{bot_2.name}_{selected_map}")
 
 				if game_result["winner"] == 1:
 					bot_1.update_result(did_win=True)

@@ -55,7 +55,11 @@ class MyPlayer(Player):
     # print("Init")
     self.turn = 0
     self.covered_tiles = set()
-    return
+    self.towers_we_tried_to_build = set()
+
+    # # precompute blocking rings
+    # for i1 in range(self.width):
+    #   for i2 in range(i1 + ))
 
   def is_valid(self, i, j, width, height):
     return i >= 0 and i < width and j >= 0 and j < height
@@ -100,6 +104,8 @@ class MyPlayer(Player):
             best_cost = total_cost
             best_pos = (i,j)
     # print(best_cost)
+    # if best_cost == math.inf:
+    #   breakpoint()
     
     '''
     best_d = 10000
@@ -130,8 +136,8 @@ class MyPlayer(Player):
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
             has_built = True
-            for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
-              self.covered_tiles.add((tx+_i, ty+_j))
+            self.towers_we_tried_to_build.clear()
+            self.towers_we_tried_to_build.add((tx, ty))
 
         
     '''
@@ -171,18 +177,11 @@ class MyPlayer(Player):
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])
 
-    # find tiles on my team
-    my_structs = []
-    for x in range(self.WIDTH):
-      for y in range(self.HEIGHT):
-        st = map[x][y].structure
-        # check the tile is not empty
-        if st is not None:
-          # check the structure on the tile is on my team
-          if st.team == player_info.team:
-            my_structs.append(st)
-    
-    # find prev_guys
+    for i, j in self.towers_we_tried_to_build:
+      if map[i][j].structure.type == StructureType.TOWER and map[i][j].structure.team == player_info.team:
+        for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
+          self.covered_tiles.add((i+_i, j+_j))
+
     curr_money = player_info.money
     
     done = False

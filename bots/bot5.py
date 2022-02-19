@@ -7,15 +7,23 @@ import math
 
 import numpy as np
 
-
 from src.player import *
 from src.structure import *
 from src.game_constants import GameConstants as GC
+
+'''
+This bot randomly builds one building per turn (on a valid tile).
+Note that your bot may build multiple structures per turn, as long as you can afford them.
+'''
 
 def compute_passabilities(map, team):
     """
     Computes grid of cumulative passabilities for given team.
     -1 denotes impossible.
+
+    Returns:
+
+	out: 
     """
     h = len(map)
     w = len(map[0])
@@ -48,6 +56,7 @@ def compute_passabilities(map, team):
 class MyPlayer(Player):
 
   def __init__(self):
+    # print("Init")
     self.turn = 0
     self.covered_tiles = set()
     return
@@ -58,28 +67,44 @@ class MyPlayer(Player):
   def try_build_one(self, curr_money, map, player_info, turns_left):
     # returns new money and whether or not it built
     has_built = False
+    build_targets = []
+
+    population_increase = np.array([
+      [
+        map[i][j].population if (i, j) not in self.covered_tiles else 0
+        for j in range(self.HEIGHT)
+      ]
+      for i in range(self.WIDTH)
+    ])
+    population_increase = np.pad(population_increase, ((2, 2), (2, 2)))
+    population_increase = population_increase[2:-2, 2:-2] \
+      + population_increase[1:-3, 2:-2] \
+      + population_increase[0:-4, 2:-2] \
+      + population_increase[3:-1, 2:-2] \
+      + population_increase[4:, 2:-2] \
+      + population_increase[2:-2, 0:-4] \
+      + population_increase[2:-2, 1:-3] \
+      + population_increase[2:-2, 3:-1] \
+      + population_increase[2:-2, 4:] \
+      + population_increase[1:-3, 1:-3] \
+      + population_increase[3:-1, 1:-3] \
+      + population_increase[1:-3, 3:-1] \
+      + population_increase[3:-1, 3:-1]
 
     out, paths = compute_passabilities(map, player_info.team)
     best_cost = math.inf
     best_pos = (-1,-1)
     for i in range(self.WIDTH):
       for j in range(self.HEIGHT):
-        if map[i][j].population > 0 and map[i][j].structure is None and out[i][j] > 0:
-          population_increase = 0
-          for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
-            if self.is_valid(i+_i, j+_j, self.WIDTH, self.HEIGHT) and (i+_i, j+_j) not in self.covered_tiles:
-              population_increase += map[i+_i][j+_j].population
-          if population_increase == 0:
-            continue
+        if population_increase[i, j] > 0 and out[i][j] > 0 and map[i][j].structure is None:
           total_cost = map[i][j].passability * 250 \
             + (out[i][j] - map[i][j].passability) * 10 \
-            - population_increase * turns_left
+            - population_increase[i, j] * turns_left
           # (cost of tower) + (cost of roads) - (increase in population) * (turns left)
           if total_cost < best_cost:
             best_cost = total_cost
             best_pos = (i,j)
-    # print(best_cost)
-    
+
     if best_pos != (-1, -1):
       i,j = best_pos 
       path = paths[(i,j)]
@@ -90,18 +115,29 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
+            build_targets.append((tx, ty))
             has_built = True
         else:
           cost = map[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
+            build_targets.append((tx, ty))
             has_built = True
             for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
               self.covered_tiles.add((tx+_i, ty+_j))
 
-        
-    return (curr_money, has_built)
+    # import ipdb
+    # ipdb.set_trace()
+    out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team.value)
+    should_bid = False
+
+    # For each build target, figure out if bidding necessary
+    for (x, y) in build_targets:
+      if out_opp[x][y] >= 0 and out_opp[x][y] < out[x][y]:
+        should_bid = True
+
+    return (curr_money, has_built, should_bid)
 
   def play_turn(self, turn_num, map, player_info):
     self.WIDTH = len(map)
@@ -122,11 +158,15 @@ class MyPlayer(Player):
     curr_money = player_info.money
     
     done = False
+    bid = False
+    bid_amount = 0
     while not done:
-      curr_money, has_built = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
+      curr_money, has_built, should_bid = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
+      if should_bid:
+          bid_delta = random.randint(1, 2)
+          bid_amount += bid_delta
+          curr_money -= bid_delta
       done = not has_built 
 
-    # randomly bid 1 or 2
-    self.set_bid(random.randint(1, 2))
-
+    self.set_bid(bid_amount)
     return
