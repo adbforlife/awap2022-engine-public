@@ -100,8 +100,6 @@ class MyPlayer(Player):
     # returns new money and whether or not it built
     has_built = False
 
-
-    print('hi')
     #out = compute_passabilities(map, player_info.team)
     #print(out)
     #breakpoint()
@@ -146,12 +144,10 @@ class MyPlayer(Player):
 
   def play_turn(self, turn_num, map, player_info):
 
-    print('hi')
     self.WIDTH = len(map)
     self.HEIGHT = len(map[0])
 
     # find tiles on my team
-    print('hi')
     my_structs = []
     for x in range(self.WIDTH):
       for y in range(self.HEIGHT):
@@ -169,7 +165,6 @@ class MyPlayer(Player):
     
     done = False
     while not done:
-      print('hi')
       curr_money, has_built = self.try_build_one(curr_money, prev_guys, map, player_info)
       done = not has_built 
     
