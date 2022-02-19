@@ -11,7 +11,7 @@ from src.custom_json import *
 from src.game_constants import GameConstants as GC
 
 maps = ["flappy", "island", "modified_flappy", "multiple_islands", "ridges"]
-bots_to_use = ["bot1", "bot2"] # , "c1", "c2", "c3"]
+bots_to_use = ["bot1", "bot2", "bot3"] # , "c1", "c2", "c3"]
 nbots = len(bots_to_use)
 replay_file_base = "tournament_replay"
 
@@ -27,6 +27,8 @@ class Bot():
 			self.wins += 1
 
 	def win_rate(self):
+		if self.rounds_played == 0:
+			return 0
 		return self.wins / self.rounds_played
 
 if __name__ == "__main__":
@@ -59,16 +61,13 @@ if __name__ == "__main__":
 				if game_result["winner"] == 1:
 					bot_1.update_result(did_win=True)
 					bot_2.update_result(did_win=False)
-					print(f"{bot_1.name} won against {bot_2}.name")
+					print(f"{bot_1.name} won against {bot_2.name}")
 				elif game_result["winner"] == 2:
 					bot_1.update_result(did_win=False)
 					bot_2.update_result(did_win=True)
-					print(f"{bot_2.name} won against {bot_1}.name")
+					print(f"{bot_2.name} won against {bot_1.name}")
 				else:
 					print("Unrecognized winner")
 				
 				for bot in bots:
-					print("{bot.name} win rate: ", bot.win_rate() * 100)
-
-	# for bot in bots:
-	# 	print("{bot.name} win rate: ", bot.win_rate() * 100)
+					print(f"{bot.name} win rate: ", bot.win_rate() * 100)
