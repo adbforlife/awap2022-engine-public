@@ -115,24 +115,27 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
-	    build_targets.append((tx, ty))
+            build_targets.append((tx, ty))
             has_built = True
         else:
           cost = map[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
-	    build_targets.append((tx, ty))
+            build_targets.append((tx, ty))
             has_built = True
             for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
               self.covered_tiles.add((tx+_i, ty+_j))
 
-    out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team)
+    # import ipdb
+    # ipdb.set_trace()
+    out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team.value)
     should_bid = False
+
     # For each build target, figure out if bidding necessary
     for (x, y) in build_targets:
-	    if out_opp[x][y] >= 0 and out_opp[x][y] < out[x][y]:
-		    should_bid = True
+      if out_opp[x][y] >= 0 and out_opp[x][y] < out[x][y]:
+        should_bid = True
 
     return (curr_money, has_built, should_bid)
 
@@ -160,9 +163,9 @@ class MyPlayer(Player):
     while not done:
       curr_money, has_built, should_bid = self.try_build_one(curr_money, map, player_info, 250 - turn_num)
       if should_bid:
-	      bid_delta = random.randint(1, 2)
-	      bid_amount += bid_delta
-	      curr_money -= bid_delta
+          bid_delta = random.randint(1, 2)
+          bid_amount += bid_delta
+          curr_money -= bid_delta
       done = not has_built 
 
     self.set_bid(bid_amount)
