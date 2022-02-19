@@ -14,7 +14,8 @@ Note that your bot may build multiple structures per turn, as long as you can af
 class MyPlayer(Player):
 
     def __init__(self):
-        print("Init")
+        # SUPPRESSED
+        # print("Init")
         self.turn = 0
 
         return
