@@ -49,9 +49,7 @@ if __name__ == "__main__":
 			selected_map = "bad_baba_nonexistent_map"
 
 		for i in range(nbots):
-			for j in range(nbots):
-				if i == j:
-					continue
+			for j in range(i + 1, nbots):
 				bot_1 = bots[i]
 				bot_2 = bots[j]
 

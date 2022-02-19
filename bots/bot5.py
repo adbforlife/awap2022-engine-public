@@ -20,6 +20,10 @@ def compute_passabilities(map, team):
     """
     Computes grid of cumulative passabilities for given team.
     -1 denotes impossible.
+
+    Returns:
+
+	out: 
     """
     h = len(map)
     w = len(map[0])
@@ -111,15 +115,22 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
+	    build_targets.append((tx, ty))
             has_built = True
         else:
           cost = map[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
+	    build_targets.append((tx, ty))
             has_built = True
             for _i, _j in [(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0), (0, 2), (0, 1), (0, -1), (0, -2), (-1, 1), (-1, -1), (1, 1), (1, -1)]:
               self.covered_tiles.add((tx+_i, ty+_j))
+
+    out_opp, out_paths_opp = compute_passabilities(map, 1 - player_info.team)
+    # For each build target, figure out if bidding necessary
+    for build_target in build_targets:
+	    pass
 
     return (curr_money, has_built)
 
