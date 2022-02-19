@@ -65,6 +65,9 @@ class MyPlayer(Player):
     return prev_guys
 
   def try_build_one(self, curr_money, prev_guys, map):
+    # returns new money and whether or not it built
+    has_built = False
+
     best_d = 10000
     best_pos = (-1,-1)
     for i in range(self.WIDTH):
@@ -75,7 +78,6 @@ class MyPlayer(Player):
             best_d = d
             best_pos = (i,j)
     print(best_pos, best_d)
-    print('hi')
     if best_pos != (-1, -1):
       i,j = best_pos
       path = []
@@ -92,11 +94,16 @@ class MyPlayer(Player):
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.ROAD, tx, ty)
+            has_built = True
         else:
           cost = map[tx][ty].passability * 250
           if cost < curr_money:
             curr_money -= cost
             self.build(StructureType.TOWER, tx, ty)
+            has_built = True 
+    
+    return (curr_money, has_built)
+
 
 
 
@@ -119,7 +126,12 @@ class MyPlayer(Player):
     # find prev_guys
     prev_guys = self.find_prev_guys(map, player_info)
 
-    self.try_build_one(player_info.money, prev_guys, map)
+    curr_money = player_info.money
+    
+    done = False
+    while not done:
+      curr_money, has_built = self.try_build_one(curr_money, prev_guys, map)
+      done = not has_built 
     
 
     # call helper method to build randomly
